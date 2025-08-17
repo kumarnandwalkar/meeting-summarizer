@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import Summary from '../models/Summary.js';
+import Summary from '../models/summary.js';
 import { generateSummary } from '../services/ai.js';
 
 const r = Router();
