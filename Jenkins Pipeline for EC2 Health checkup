@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    environment {
+        INTERVAL = 10 // seconds between updates
+    }
+
+    stages {
+        stage('Live CPU & RAM Monitor') {
+            steps {
+                script {
+                    echo "Starting live monitoring of CPU & RAM. Press stop in Jenkins to end."
+                    
+                    // Infinite loop to keep monitoring
+                    while(true) {
+                        // Get CPU usage (percentage used)
+                        def cpuUsage = sh(
+                            script: "top -bn1 | grep 'Cpu(s)' | awk '{print 100 - \$8 \"%\"}'",
+                            returnStdout: true
+                        ).trim()
+
+                        // Get RAM usage (used / total in MB)
+                        def ramUsage = sh(
+                            script: "free -m | awk 'NR==2{printf \"%dMB/%dMB\", \$3, \$2 }'",
+                            returnStdout: true
+                        ).trim()
+
+                        // Print formatted output
+                        echo "🖥 CPU: ${cpuUsage} | RAM: ${ramUsage}"
+
+                        // Wait for INTERVAL seconds
+                        sleep(time: INTERVAL.toInteger(), unit: 'SECONDS')
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Monitoring stopped ✅'
+        }
+    }
+}
