@@ -1,20 +1,31 @@
-FROM node:20-alpine
-
+# ---- Stage 1: Build ----
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy package files for server and client
+# Install server dependencies
 COPY server/package*.json ./server/
+RUN npm --prefix server install --legacy-peer-deps
+
+# Install client dependencies
 COPY client/package*.json ./client/
+RUN npm --prefix client install --legacy-peer-deps
 
-# Install server and client dependencies
-RUN npm --prefix server install
-RUN npm --prefix client install
-
-# Copy all source code
+# Copy full project
 COPY . .
 
-# Expose ports for backend and frontend
-EXPOSE 3000 5173
+# Build client (React)
+RUN npm --prefix client run build
 
-# Start both backend and frontend
-CMD ["npx", "concurrently", "npm --prefix server run dev", "npm --prefix client run dev"]
+# ---- Stage 2: Runtime ----
+FROM node:20-alpine
+WORKDIR /app
+
+# Copy only necessary files from builder
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/client/build ./client/build
+
+# Expose backend port
+EXPOSE 8080
+
+# Start backend
+CMD ["npm", "--prefix", "server", "start"]
