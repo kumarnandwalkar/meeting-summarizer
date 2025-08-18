@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "meeting-summarizer"
+        REACT_PORT = "5173"
+        BACKEND_PORT = "9090"
+    }
+
+    stages {
+        stage('Pull Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/kumarnandwalkar/meeting-summarizer.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Stop & Remove Existing Container') {
+            steps {
+                sh '''
+                docker stop $DOCKER_IMAGE || true
+                docker rm $DOCKER_IMAGE || true
+                '''
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                sh """
+                docker run -d --name $DOCKER_IMAGE \
+                    -p $REACT_PORT:5173 \
+                    -p $BACKEND_PORT:8080 \
+                    --restart unless-stopped \
+                    $DOCKER_IMAGE
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful ✅'
+        }
+        failure {
+            echo 'Deployment Failed ❌'
+        }
+    }
+}
