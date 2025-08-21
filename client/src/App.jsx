@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './App.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080/api';
 
@@ -45,7 +46,7 @@ export default function App() {
     const list = recipients.split(',').map(s => s.trim()).filter(Boolean);
     if (list.length === 0) return alert('Add recipient emails');
 
-    const payload = { 
+    const payload = {
       recipients: list,
       subject,
       summaryText: summary
@@ -82,36 +83,93 @@ export default function App() {
   }
 
   return (
-    <div style={{ padding: 16, maxWidth: 900, margin: '0 auto', fontFamily: 'system-ui' }}>
-      <h2>AI Meeting Notes Summarizer</h2>
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="logo">📝</div>
+          <div>
+            <h1 className="title">Meeting Summarizer</h1>
+            <p className="subtitle">Turn raw transcripts into polished notes</p>
+          </div>
+        </div>
+        {summaryId && (
+          <div className="badge">ID: {summaryId}</div>
+        )}
+      </header>
 
-      <label>Title</label>
-      <input value={title} onChange={e=>setTitle(e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+      <main className="container">
+        <div className="grid">
+          <section className="panel">
+            <div className="panel-header">Input</div>
 
-      <label>Transcript (.txt or paste)</label>
-      <input type="file" accept=".txt" onChange={handleFile} />
-      <textarea value={transcriptText} onChange={e=>setTranscript(e.target.value)} rows={10} style={{ width: '100%', marginTop: 8 }} />
+            <div className="form-group">
+              <label className="label">Title</label>
+              <input
+                className="input"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. Weekly Sync"
+              />
+            </div>
 
-      <label>Instruction</label>
-      <input value={instruction} onChange={e=>setInstruction(e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+            <div className="form-group">
+              <label className="label">Transcript (.txt or paste)</label>
+              <input className="input-file" type="file" accept=".txt" onChange={handleFile} />
+              <textarea
+                className="textarea"
+                value={transcriptText}
+                onChange={e => setTranscript(e.target.value)}
+                rows={10}
+                placeholder="Paste meeting transcript here..."
+              />
+            </div>
 
-      <button onClick={handleSummarize} disabled={loading}>
-        {loading ? 'Generating…' : 'Generate Summary'}
-      </button>
+            <div className="form-group">
+              <label className="label">Instruction</label>
+              <input
+                className="input"
+                value={instruction}
+                onChange={e => setInstruction(e.target.value)}
+                placeholder="How should the AI summarize?"
+              />
+            </div>
 
-      <h3 style={{ marginTop: 16 }}>Summary (editable)</h3>
-      <textarea value={summary} onChange={e=>setSummary(e.target.value)} rows={14} style={{ width: '100%' }} />
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <button onClick={saveEdits}>Save Edits</button>
-        <button onClick={() => navigator.clipboard.writeText(summary)}>Copy</button>
-      </div>
+            <div className="actions">
+              <button className="button primary" onClick={handleSummarize} disabled={loading}>
+                {loading ? 'Generating…' : 'Generate Summary'}
+              </button>
+            </div>
+          </section>
 
-      <h3 style={{ marginTop: 16 }}>Share via Email</h3>
-      <label>Subject</label>
-      <input value={subject} onChange={e=>setSubject(e.target.value)} style={{ width: '100%' }} />
-      <label>Recipients (comma-separated)</label>
-      <input value={recipients} onChange={e=>setRecipients(e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
-      <button onClick={share}>Send</button>
+          <section className="panel">
+            <div className="panel-header">Summary (editable)</div>
+            <textarea
+              className="textarea tall"
+              value={summary}
+              onChange={e => setSummary(e.target.value)}
+              rows={14}
+              placeholder="Your summary will appear here..."
+            />
+            <div className="actions">
+              <button className="button" onClick={saveEdits} disabled={!summaryId}>Save Edits</button>
+              <button className="button ghost" onClick={() => navigator.clipboard.writeText(summary)} disabled={!summary}>Copy</button>
+            </div>
+
+            <div className="panel-subheader">Share via Email</div>
+            <div className="form-group">
+              <label className="label">Subject</label>
+              <input className="input" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Meeting Summary" />
+            </div>
+            <div className="form-group">
+              <label className="label">Recipients (comma-separated)</label>
+              <input className="input" value={recipients} onChange={e => setRecipients(e.target.value)} placeholder="alice@acme.com, bob@acme.com" />
+            </div>
+            <div className="actions">
+              <button className="button primary" onClick={share} disabled={!summary || !recipients.trim()}>Send</button>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
